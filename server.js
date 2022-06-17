@@ -1,19 +1,22 @@
 const express = require("express");
 const app = express();
 
-function getDiaries(req, res) {
-  return res.json({ OK: 1 });
+const { MongoClient } = require('mongodb');
+const connectionString = 'mongodb+srv://test:test@cluster0.ggrr9.mongodb.net/?retryWrites=true&w=majority';
+const client = new MongoClient(connectionString);
+
+// Database Name
+const dbName = 'MyDiaries';
+
+async function getDiaries(req, res) {
+  // Use connect method to connect to the server
+  await client.connect();
+  const db = client.db(dbName);
+  const collection = db.collection('Diaries');
+  const result = await collection.find({}).toArray();
+  return res.json(result);
 }
 
-function getUsers(req, res) {
-    return res.json([{ name: 'Prkash'}, {emai: 'prakra@gmail.com'}])
-}
-
-        // endpoint  // function envoked for endpoint
 app.get('/diaries', getDiaries);
 
-app.get('/users', getUsers);
-
-
-// http:localhost:3000/endpoint
 app.listen(3000);
