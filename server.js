@@ -39,4 +39,49 @@ async function getDiary(req, res) {
 
 app.get('/diary/:id', getDiary);
 
+
+app.use(express.json());
+// post, patch
+
+async function postDiary(req, res) {
+  const newDiary = req.body;
+  // Use connect method to connect to the server
+  await client.connect();
+  const db = client.db(dbName);
+  const collection = db.collection('Diaries');
+  console.log("Got from postman: ", newDiary);
+  const result = await collection.insertOne(newDiary);
+  return res.json(result);
+}
+//POST --> CREATE
+app.post('/diary', postDiary);
+
+
+// PATCH --> UPDATE (HW PATCH VS PUT)
+async function postDiary(req, res) {
+  const _id = req.params.id;
+  const newDiary = req.body;
+  // Use connect method to connect to the server
+  await client.connect();
+  const db = client.db(dbName);
+  const collection = db.collection('Diaries');
+  console.log("PATCH: Got from postman: ", newDiary);
+  console.log("PATCH: Got from postman: ", { _id: Number(_id)});
+  console.log("PATCH: Got from postman: ", { $set: newDiary });
+  const result = await collection.updateOne({ _id: Number(_id) }, { $set: newDiary });
+  return res.json(result);
+}
+//PATCH --> UPDATE
+app.patch('/diary/:id', postDiary);
+
 app.listen(3000);
+
+/**
+ * Homework
+ * 1. PUT VS PATCH
+ * 
+ * 2. Create a Library Database Book collection
+ *      and add get/getbyId/post/patch apis
+ * 
+ * 3. Read about JWT token
+ */
