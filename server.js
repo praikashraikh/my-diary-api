@@ -1,6 +1,7 @@
 const express = require("express");
 const res = require("express/lib/response");
 const app = express();
+var jwt = require('jsonwebtoken');
 
 const { MongoClient } = require('mongodb');
 const connectionString = 'mongodb+srv://test:test@cluster0.ggrr9.mongodb.net/?retryWrites=true&w=majority';
@@ -73,6 +74,33 @@ async function postDiary(req, res) {
 }
 //PATCH --> UPDATE
 app.patch('/diary/:id', postDiary);
+
+async function loginCheck(req, res) {
+  // get username/passport from req body
+  const userCred = req.body;
+
+  // check if username/password exist in database
+  await client.connect();
+  const db = client.db(dbName);
+  const collection = db.collection('Users');
+  console.log("userCred: ", userCred);
+  const user = await collection.findOne({ userName: userCred.userName, password: userCred.password });
+  //if yes generate JWT token and send back
+  if (user) {
+    const token = jwt.sign({
+      data: user
+    }, 'my-secret', { expiresIn: 60 * 60 });
+
+    res.json({ token: token });
+  } else {
+    // if No send Invalid username/password message
+    res.json({ message: "Invalid username/password!!" });
+  }
+
+}
+
+// Login api
+app.post('/login', loginCheck);
 
 app.listen(3000);
 
