@@ -1,7 +1,7 @@
 const express = require("express");
 const res = require("express/lib/response");
 const app = express();
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 const { MongoClient } = require('mongodb');
 const connectionString = 'mongodb+srv://test:test@cluster0.ggrr9.mongodb.net/?retryWrites=true&w=majority';
@@ -24,7 +24,23 @@ async function getDiaries(req, res) {
   return res.json(result);
 }
 
-app.get('/diaries', getDiaries);
+function verifyLogin(req, res, next) {
+  const token = req.headers['authorization'];
+
+  console.log("Got token: ", token);
+
+  jwt.verify(token, 'my-secret', (err, authData) => {
+    if (err) {
+      console.log("Error occured!!");
+      res.json({ message: "Invalid Token!!" });
+    } else {
+      console.log("Successfully verified: ", authData);
+      next();
+    }
+  });
+}
+
+app.get('/diaries', verifyLogin, getDiaries);
   
 async function getDiary(req, res) {
   const id = req.params.id;
