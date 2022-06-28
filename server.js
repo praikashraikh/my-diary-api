@@ -4,7 +4,7 @@ const app = express();
 const jwt = require('jsonwebtoken');
 
 const { MongoClient } = require('mongodb');
-const connectionString = 'mongodb+srv://test:test@cluster0.ggrr9.mongodb.net/?retryWrites=true&w=majority';
+const connectionString = 'mongodb+srv://test:test@cluster0.jm6ptjh.mongodb.net/?retryWrites=true&w=majority';
 const client = new MongoClient(connectionString);
 
 // Database Name
@@ -13,6 +13,12 @@ const dbName = 'MyDiaries';
 async function getDiaries(req, res) {
   const searchParam = req.query.search;
   const abc = req.query.test;
+
+  /// 2   ============ get the value set inverifyLogin
+  const user = req.user;
+
+
+  console.log("=== USER FROM REQ ====", user);
   console.log("Search params found: ", searchParam);
   console.log("abc: ", abc);
 
@@ -20,7 +26,8 @@ async function getDiaries(req, res) {
   await client.connect();
   const db = client.db(dbName);
   const collection = db.collection('Diaries');
-  const result = await collection.find({ "title": searchParam }).toArray();
+  console.log("Querying: ", { "title": searchParam, username: user.data.userName })
+  const result = await collection.find({ "title": searchParam, userName: user.data.userName }).toArray();
   return res.json(result);
 }
 
@@ -35,6 +42,10 @@ function verifyLogin(req, res, next) {
       res.json({ message: "Invalid Token!!" });
     } else {
       console.log("Successfully verified: ", authData);
+
+      // 1 =====> Set into req object
+      req.user = authData;
+      
       next();
     }
   });
@@ -75,7 +86,7 @@ app.post('/diary', postDiary);
 
 
 // PATCH --> UPDATE (HW PATCH VS PUT)
-async function postDiary(req, res) {
+async function patchDiary(req, res) {
   const _id = req.params.id;
   const newDiary = req.body;
   // Use connect method to connect to the server
@@ -89,7 +100,7 @@ async function postDiary(req, res) {
   return res.json(result);
 }
 //PATCH --> UPDATE
-app.patch('/diary/:id', postDiary);
+app.patch('/diary/:id', patchDiary);
 
 async function loginCheck(req, res) {
   // get username/passport from req body
